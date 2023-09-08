@@ -1,0 +1,27 @@
+{
+  "defaultSeverity": "warning",
+  "extends": [
+    "tslint:recommended"
+  ],
+  "linterOptions": {
+    "exclude": [
+      "node_modules/**",
+      "../../../ARVO/pupil-labs/**"
+    ]
+  },
+  "rules": {
+    "quotemark": [true, "single"],
+    "indent": [true, "spaces", 2],
+    "interface-name": false,
+    "ordered-imports": false,
+    "object-literal-sort-keys": false,
+    "no-consecutive-blank-lines": false,
+    "typedef": false,
+    "member-access": false,
+    "one-line": ["check-open-brace", "check-whitespace"],
+    "arrow-parens": false,
+    "max-classes-per-file": false,
+    "forin": false,
+    "no-console": false
+  }
+}

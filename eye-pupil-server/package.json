@@ -1,0 +1,33 @@
+{
+  "name": "gaze-on-gadget-server",
+  "version": "1.0.0",
+  "description": "Server for gaze-on-gadget events",
+  "main": "index.js",
+  "scripts": {
+    "build": "set NODE_ENV=production & npm run build-ts",
+    "build-ts": "tsc -p .",
+    "serve": "set NODE_ENV=development & ts-node-dev -r tsconfig-paths/register --respawn --transpileOnly ./index.ts -v",
+    "start": "node -r esm -r ./prod-paths.js ./build/MIVI/PupilSize/eye-pupil-server/index.js -v",
+    "lint": "tslint -c tslint.json 'src/**/*.ts'"
+  },
+  "author": "Oleg Spakov",
+  "license": "MIT",
+  "dependencies": {
+    "command-line-args": "^5.1.1",
+    "msgpack-lite": "^0.1.26",
+    "ws": "^7.2.0",
+    "zeromq": "^5.2.0"
+  },
+  "devDependencies": {
+    "@types/command-line-args": "^5.0.0",
+    "@types/msgpack-lite": "^0.1.7",
+    "@types/node": "^12.12.5",
+    "@types/ws": "^6.0.4",
+    "@types/zeromq": "^4.6.2",
+    "esm": "^3.2.25",
+    "ts-node-dev": "^1.0.0-pre.44",
+    "tsconfig-paths": "^3.9.0",
+    "tslint": "^6.0.0-beta0",
+    "typescript": "^3.6.4"
+  }
+}

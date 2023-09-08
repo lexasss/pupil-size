@@ -1,0 +1,55 @@
+﻿<Window x:Class="PupilSize.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib" 
+        xmlns:local="clr-namespace:PupilSize"
+        mc:Ignorable="d"
+        Title="MainWindow"
+        Height="450" Width="1000"
+        Loaded="Window_Loaded">
+    <Window.Resources>
+        <Style x:Key="Item" TargetType="Label">
+            <Setter Property="Margin" Value="2,12"/>
+        </Style>
+
+        <ObjectDataProvider x:Key="DataSourceType"
+                            ObjectType="{x:Type sys:Enum}"
+                            MethodName="GetValues">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="local:Source" />
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+    </Window.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <StackPanel Grid.Column="0">
+            <Label Content="Source:"/>
+            <ListView x:Name="lsvSource"
+                      ItemsSource="{Binding Source={StaticResource DataSourceType}}"
+                      SelectedIndex="0"
+                      SelectionChanged="Source_SelectionChanged">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Label Style="{StaticResource Item}" Content="{Binding}"/>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </StackPanel>
+        <local:LiveData x:Name="lvdChart" Grid.Column="1"/>
+        <Grid Grid.Column="2" HorizontalAlignment="Right" Width="24">
+            <TextBlock x:Name="tblSize" HorizontalAlignment="Right" Text="0"/>
+            <Border x:Name="brdSize"
+                    HorizontalAlignment="Right" 
+                    Background="Red"
+                    VerticalAlignment="Bottom"
+                    Height="100"
+                    Width="10"/>
+        </Grid>
+    </Grid>
+</Window>

@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "commonjs",
+    "sourceMap": false,
+    "outDir": "./build",
+    "importHelpers": false,
+    "strict": true,
+    "baseUrl": "./",
+    "paths": {
+      "@/*": [ "src/*" ],
+      "@gaze/*": [ "../../../ARVO/pupil-labs/src/*" ]
+    },
+    "esModuleInterop": true,
+    "lib": [
+      "esnext"
+    ]
+  },
+  "include": [
+    "index.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
