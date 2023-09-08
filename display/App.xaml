@@ -1,7 +1,7 @@
-﻿<Application x:Class="PupilSize.App"
+﻿<Application x:Class="PupilSizeDisplay.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:PupilSize"
+             xmlns:local="clr-namespace:PupilSizeDisplay"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
          

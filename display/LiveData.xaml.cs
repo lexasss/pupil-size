@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Windows.Controls;
 
-namespace PupilSize;
+namespace PupilSizeDisplay;
 
 public partial class LiveData : UserControl
 {
