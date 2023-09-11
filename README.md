@@ -4,7 +4,7 @@
 
 Tested with
 - [Pupil Core](https://pupil-labs.com/products/core/) model bought in year 2019
-- (Pupil Capture)[https://github.com/pupil-labs/pupil/releases/], with Pupil Remote enabled on port 50020
+- [Pupil Capture](https://github.com/pupil-labs/pupil/releases/), with Pupil Remote enabled on port 50020
 
 
 ## Cloning
