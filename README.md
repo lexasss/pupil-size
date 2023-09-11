@@ -32,10 +32,10 @@ Download and install the following tools:
 ### Server
 
 **IMPORTANT!**
-You need to set correct pathes to the ARVO Pupil Lab project in files `tsconfig.json` and `tslint.json` in `pupil-size-server` folder. If both `pupil-labs` and `pupil-size` are located in the same folder, then simply remove `../ARVO/` and you are good to go.
+You need to set correct pathes to the ARVO Pupil Lab project in files `tsconfig.json` and `tslint.json` in `server` folder. If both `pupil-labs` and `pupil-size` are located in the same folder, then simply remove `../ARVO/` and you are good to go.
 
 ``` bash
-cd pupil-size/pupil-size-server
+cd pupil-size/server
 npm install
 npm run build
 ````
