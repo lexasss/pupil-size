@@ -26,7 +26,6 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
         <StackPanel Grid.Column="0">
             <Label Content="Source:"/>
@@ -41,15 +40,38 @@
                 </ListView.ItemTemplate>
             </ListView>
         </StackPanel>
-        <local:LiveData x:Name="lvdChart" Grid.Column="1"/>
-        <Grid Grid.Column="2" HorizontalAlignment="Right" Width="24">
-            <TextBlock x:Name="tblSize" HorizontalAlignment="Right" Text="0"/>
-            <Border x:Name="brdSize"
-                    HorizontalAlignment="Right" 
-                    Background="Red"
-                    VerticalAlignment="Bottom"
-                    Height="100"
-                    Width="10"/>
-        </Grid>
+        <TabControl x:Name="tbcTabs" Grid.Column="1"
+                    SelectionChanged="TabControl_SelectionChanged">
+            <TabControl.Resources>
+                <Style TargetType="TextBlock">
+                    <Setter Property="HorizontalAlignment" Value="Right"/>
+                </Style>
+                <Style TargetType="TabItem">
+                    <Setter Property="Width" Value="120"/>
+                    <Setter Property="Height" Value="32"/>
+                </Style>
+                <Style x:Key="Bar" TargetType="Border">
+                    <Setter Property="HorizontalAlignment" Value="Right"/>
+                    <Setter Property="Width" Value="10"/>
+                    <Setter Property="Height" Value="100"/>
+                    <Setter Property="Background" Value="Red"/>
+                    <Setter Property="VerticalAlignment" Value="Bottom"/>
+                </Style>
+            </TabControl.Resources>
+            <TabItem Header="Left">
+                <Grid>
+                    <local:LiveData x:Name="lvdChartLeft" Grid.Column="0"/>
+                    <TextBlock x:Name="tblSizeLeft" Text="0.00"/>
+                    <Border x:Name="brdSizeLeft" Style="{StaticResource Bar}"/>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Right">
+                <Grid>
+                    <local:LiveData x:Name="lvdChartRight"/>
+                    <TextBlock x:Name="tblSizeRight" Text="0"/>
+                    <Border x:Name="brdSizeRight" Style="{StaticResource Bar}"/>
+                </Grid>
+            </TabItem>
+        </TabControl>
     </Grid>
 </Window>

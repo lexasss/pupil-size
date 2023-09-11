@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
 using System.Threading;
@@ -16,7 +15,12 @@ public enum Source { Diameter, Area }
 public partial class MainWindow : Window
 {
     private readonly WebsocketClient _client;
-    private readonly Queue<Types.Pupil> _queue = new Queue<Types.Pupil>();
+
+    private readonly LiveData[] _graphs;
+    private readonly Border[] _bars;
+    private readonly TextBlock[] _values;
+
+    private readonly Queue<Types.Pupil>[] _queue = { new Queue<Types.Pupil>(), new Queue<Types.Pupil>() };
 
     private readonly JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions() { PropertyNameCaseInsensitive = true };
 
@@ -24,12 +28,17 @@ public partial class MainWindow : Window
     private const double DATA_SOURCE_FREQUENCY = 120; // Hz
     private const double DATA_UPDATE_FREQUENCY = DATA_SOURCE_FREQUENCY / MAX_QUEUE_SIZE;  // Hz
 
-    private double _maxPupilSize = 0;
+    private double[] _maxPupilSize = {0, 0};
     private Source _source = Source.Diameter;
+    private int _pupilVisible = 0;
 
     public MainWindow()
     {
         InitializeComponent();
+
+        _graphs = new LiveData[2] { lvdChartLeft, lvdChartRight };
+        _bars = new Border[2] { brdSizeLeft, brdSizeRight };
+        _values = new TextBlock[2] { tblSizeLeft, tblSizeRight };
 
         var exitEvent = new ManualResetEvent(false);
         var url = new Uri("ws://127.0.0.1:51688");
@@ -39,17 +48,16 @@ public partial class MainWindow : Window
             ReconnectTimeout = TimeSpan.FromSeconds(10)
         };
 
-        _client.ReconnectionHappened.Subscribe(info => {
-            Debug.WriteLine($"Reconnection happened, type: {info.Type}");
-            lvdChart.Reset(DATA_UPDATE_FREQUENCY / DATA_SOURCE_FREQUENCY / LiveData.PixelsPerPoint, 0);
-        });
+        _client.ReconnectionHappened.Subscribe(info => Dispatcher.Invoke(() => {
+            System.Diagnostics.Debug.WriteLine($"Reconnection happened, type: {info.Type}");
+            //ResetGraphs();
+        }));
 
         _client.MessageReceived.Subscribe(msg =>
         {
             Types.Pupil? pupil = msg.Text != null ? JsonSerializer.Deserialize<Types.Pupil>(msg.Text, _jsonSerializerOptions) : null;
             if (pupil != null)
             {
-                Debug.WriteLine(pupil);
                 try
                 {
                     Dispatcher.Invoke(() => HandlePupil(pupil));
@@ -64,39 +72,54 @@ public partial class MainWindow : Window
         Application.Current.Exit += Exit;
     }
 
+    private void ResetGraphs()
+    {
+        if (_graphs != null)
+            _graphs[_pupilVisible].Reset(DATA_UPDATE_FREQUENCY / DATA_SOURCE_FREQUENCY / LiveData.PixelsPerPoint, 0);
+    }
+
     private void HandlePupil(Types.Pupil pupil)
     {
+        var id = 1 - pupil.Id;
+
+        if (_pupilVisible != id)
+            return;
+
         var size = _source switch
         {
             Source.Diameter => pupil.Diameter3d,
             Source.Area => pupil.Diameter,
             _ => 0
         };
-        tblSize.Text = size.ToString("F2");
-        
-        _queue.Enqueue(pupil);
-        UpdateGraphAndBar();
-    }
 
-    private void UpdateGraphAndBar()
-    {
-        if (_queue.Count != MAX_QUEUE_SIZE)
+        if (size < 0)
             return;
 
-        var mean = _queue.Average(pupil => _source switch
+        _values[id].Text = size.ToString("F2");
+        _queue[id].Enqueue(pupil);
+
+        UpdateGraphAndBar(id);
+    }
+
+    private void UpdateGraphAndBar(int id)
+    {
+        if (_queue[id].Count != MAX_QUEUE_SIZE)
+            return;
+
+        var mean = _queue[id].Average(pupil => _source switch
         {
             Source.Diameter => pupil.Diameter3d,
             Source.Area => pupil.Diameter,
             _ => 0
         });
-        lvdChart.Add(Utils.Timestamp.Sec, mean);
+        _graphs[id].Add(Utils.Timestamp.Sec, mean);
 
-        if (_maxPupilSize < mean)
-            _maxPupilSize = mean;
+        if (_maxPupilSize[id] < mean)
+            _maxPupilSize[id] = mean;
 
-        brdSize.Height = ActualHeight * mean / _maxPupilSize;
+        _bars[id].Height = (_bars[id].Parent as Grid)!.ActualHeight * mean / _maxPupilSize[id];
 
-        _queue.Clear();
+        _queue[id].Clear();
     }
 
     private void Exit(object sender, ExitEventArgs e)
@@ -108,17 +131,19 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        lvdChart.Reset(DATA_UPDATE_FREQUENCY / DATA_SOURCE_FREQUENCY / LiveData.PixelsPerPoint, 0);
+        ResetGraphs();
         lsvSource.Focus();
     }
 
     private void Source_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         _source = (Source)Enum.Parse(typeof(Source), lsvSource.SelectedItem?.ToString() ?? "");
+        ResetGraphs();
+    }
 
-        if (lvdChart == null)
-            return;
-
-        lvdChart.Reset(DATA_UPDATE_FREQUENCY / DATA_SOURCE_FREQUENCY / LiveData.PixelsPerPoint, 0);
+    private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        _pupilVisible = tbcTabs.SelectedIndex;
+        ResetGraphs();
     }
 }

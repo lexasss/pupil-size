@@ -96,7 +96,7 @@ export default class App {
   private static PORT = 51688;
   private static DATA_LOG_FREQ = 20
 
-  private _dataLogCounter = 0;
+  private _dataLogCounter = [0, 0];
 
   constructor() {
     this.server = new WebSocket.Server({ port: App.PORT });
@@ -129,10 +129,14 @@ export default class App {
   }
 
   private onPupil( pupil: Pupil ) {
+    if ('diameter_3d' in pupil === false) {
+        return;
+    }
+
     if (options.verbose) {
-        if (this._dataLogCounter++ === App.DATA_LOG_FREQ) {
-            this._dataLogCounter = 0;
-            console.log(pupil.diameter, pupil.diameter_3d);
+        if (this._dataLogCounter[ pupil.id ]++ === App.DATA_LOG_FREQ) {
+            this._dataLogCounter[ pupil.id ] = 0;
+            console.log(pupil.id, pupil.diameter, pupil.diameter_3d);
         }
     }
 

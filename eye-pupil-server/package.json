@@ -7,7 +7,7 @@
     "build": "set NODE_ENV=production & npm run build-ts",
     "build-ts": "tsc -p .",
     "serve": "set NODE_ENV=development & ts-node-dev -r tsconfig-paths/register --respawn --transpileOnly ./index.ts -v",
-    "start": "node -r esm -r ./prod-paths.js ./build/MIVI/PupilSize/eye-pupil-server/index.js -v",
+    "start": "node -r ./prod-paths.js ./build/MIVI/pupil-size/eye-pupil-server/index.js -v",
     "lint": "tslint -c tslint.json 'src/**/*.ts'"
   },
   "author": "Oleg Spakov",
