@@ -16,7 +16,7 @@ git clone https://github.com/lexasss/pupil-size.git
 git clone https://github.com/tuni-eakr/pupil-labs.git
 ```
 
-The latter command downloads [ARVO Pupil Lab](https://github.com/tuni-eakr/pupil-labs) project, as the current project depends on it.
+The latter command downloads [ARVO Pupil Labs](https://github.com/tuni-eakr/pupil-labs) project, as the current project depends on it.
 
 
 ## Requirements
@@ -32,12 +32,17 @@ Download and install the following tools:
 ### Server
 
 **IMPORTANT!**
-You need to set correct pathes to the ARVO Pupil Lab project in files `tsconfig.json` and `tslint.json` in `server` folder. If both `pupil-labs` and `pupil-size` are located in the same folder, then simply remove `../ARVO/` and you are good to go.
+You need to set correct pathes to the ARVO Pupil Labs project in files `tsconfig.json` and `tslint.json` in `server` folder. If both `pupil-labs` and `pupil-size` are located in the same folder, then simply remove `../ARVO/` and you are good to go.
+
+Install packages for both this and `pupil-labs` projects:
 
 ``` bash
 cd pupil-size/server
 npm install
 npm run build
+
+cd ../../pupil-labs
+npm install
 ````
 
 **IMPORTANT!**
