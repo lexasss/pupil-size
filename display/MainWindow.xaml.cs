@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Threading;
 using Websocket.Client;
 
 namespace PupilSizeDisplay;
@@ -14,8 +15,6 @@ public enum Source { Diameter, Area }
 
 public partial class MainWindow : Window
 {
-    private readonly WebsocketClient _client;
-
     private readonly LiveData[] _graphs;
     private readonly Border[] _bars;
     private readonly TextBlock[] _values;
@@ -27,6 +26,9 @@ public partial class MainWindow : Window
     private const int MAX_QUEUE_SIZE = 5;       // samples to average
     private const double DATA_SOURCE_FREQUENCY = 120; // Hz
     private const double DATA_UPDATE_FREQUENCY = DATA_SOURCE_FREQUENCY / MAX_QUEUE_SIZE;  // Hz
+
+
+    private WebsocketClient? _client;
 
     private double[] _maxPupilSize = {0, 0};
     private Source _source = Source.Diameter;
@@ -40,36 +42,56 @@ public partial class MainWindow : Window
         _bars = new Border[2] { brdSizeLeft, brdSizeRight };
         _values = new TextBlock[2] { tblSizeLeft, tblSizeRight };
 
-        var exitEvent = new ManualResetEvent(false);
+        CreateWebSocketClient();
+
+        Application.Current.Exit += Exit;
+    }
+
+    private void CreateWebSocketClient()
+    {
         var url = new Uri("ws://127.0.0.1:51688");
 
         _client = new WebsocketClient(url)
         {
-            ReconnectTimeout = TimeSpan.FromSeconds(10)
+            IsReconnectionEnabled = false
         };
 
-        _client.ReconnectionHappened.Subscribe(info => Dispatcher.Invoke(() => {
-            System.Diagnostics.Debug.WriteLine($"Reconnection happened, type: {info.Type}");
-            //ResetGraphs();
-        }));
-
-        _client.MessageReceived.Subscribe(msg =>
-        {
-            Types.Pupil? pupil = msg.Text != null ? JsonSerializer.Deserialize<Types.Pupil>(msg.Text, _jsonSerializerOptions) : null;
-            if (pupil != null)
-            {
-                try
-                {
-                    Dispatcher.Invoke(() => HandlePupil(pupil));
-                }
-                catch (TaskCanceledException)
-                { }
-            }
-        });
+        _client.DisconnectionHappened.Subscribe(OnDisconnected);
+        _client.ReconnectionHappened.Subscribe(OnConnected);
+        _client.MessageReceived.Subscribe(OnMessage);
 
         _client.Start();
+    }
 
-        Application.Current.Exit += Exit;
+    private void OnDisconnected(DisconnectionInfo info) => Dispatcher.Invoke(() => {
+        tblConnection.Text = "disconnected";
+        elpCorrectionSign.Fill = Brushes.Red;
+
+        System.Diagnostics.Debug.WriteLine("Disconnected");
+
+        DispatchOnce.Do(3, CreateWebSocketClient);
+    });
+
+    private void OnConnected(ReconnectionInfo info) => Dispatcher.Invoke(() => {
+        tblConnection.Text = "connected";
+        elpCorrectionSign.Fill = Brushes.Green;
+
+        System.Diagnostics.Debug.WriteLine("Connected");
+        //ResetGraphs();
+    });
+
+    private void OnMessage(ResponseMessage msg)
+    {
+        Types.Pupil? pupil = msg.Text != null ? JsonSerializer.Deserialize<Types.Pupil>(msg.Text, _jsonSerializerOptions) : null;
+        if (pupil != null)
+        {
+            try
+            {
+                Dispatcher.Invoke(() => HandlePupil(pupil));
+            }
+            catch (TaskCanceledException)
+            { }
+        }
     }
 
     private void ResetGraphs()

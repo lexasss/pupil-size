@@ -6,7 +6,7 @@
         xmlns:sys="clr-namespace:System;assembly=mscorlib" 
         xmlns:local="clr-namespace:PupilSizeDisplay"
         mc:Ignorable="d"
-        Title="MainWindow"
+        Title="PupilSize"
         Height="450" Width="1000"
         Loaded="Window_Loaded">
     <Window.Resources>
@@ -28,7 +28,10 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <StackPanel Grid.Column="0">
-            <Label Content="Source:"/>
+            <Label Content="Source"
+                   VerticalContentAlignment="Center"
+                   HorizontalContentAlignment="Center"
+                   Height="34"/>
             <ListView x:Name="lsvSource"
                       ItemsSource="{Binding Source={StaticResource DataSourceType}}"
                       SelectedIndex="0"
@@ -39,6 +42,17 @@
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
+        </StackPanel>
+        <StackPanel Grid.Column="0"
+                    MinWidth="94"
+                    VerticalAlignment="Bottom">
+            <WrapPanel Margin="4">
+                <Ellipse x:Name="elpCorrectionSign"
+                         Fill="Red"
+                         Margin="4"
+                         Width="{Binding ActualHeight, Mode=OneWay, RelativeSource={RelativeSource Self}}"/>
+                <TextBlock x:Name="tblConnection" Text="disconnected"/>
+            </WrapPanel>
         </StackPanel>
         <TabControl x:Name="tbcTabs" Grid.Column="1"
                     SelectionChanged="TabControl_SelectionChanged">
