@@ -1,4 +1,4 @@
-cd eye-pupil-server
+cd server
 cmd.exe /c 'start "PupilSize server" npm run start'
 cd ..
 Start-Sleep 2
