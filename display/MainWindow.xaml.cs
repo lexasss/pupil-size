@@ -13,15 +13,32 @@ namespace PupilSizeDisplay;
 
 public enum Source { Diameter, Area }
 
+public class PupilUI
+{
+    public LiveData Graph => _graph;
+    public Border Bar => _bar;
+    public TextBlock Value => _value;
+    public Queue<Types.Pupil> Queue => _queue;
+    public PupilUI(LiveData graph, Border bar, TextBlock value)
+    {
+        _graph = graph;
+        _bar = bar;
+        _value = value;
+    }
+
+    // Internal
+
+    private readonly LiveData _graph;
+    private readonly Border _bar;
+    private readonly TextBlock _value;
+    private readonly Queue<Types.Pupil> _queue = new();
+}
+
 public partial class MainWindow : Window
 {
-    private readonly LiveData[] _graphs;
-    private readonly Border[] _bars;
-    private readonly TextBlock[] _values;
+    private readonly PupilUI[] _ui;
 
-    private readonly Queue<Types.Pupil>[] _queue = { new Queue<Types.Pupil>(), new Queue<Types.Pupil>() };
-
-    private readonly JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions() { PropertyNameCaseInsensitive = true };
+    private readonly JsonSerializerOptions _jsonSerializerOptions = new() { PropertyNameCaseInsensitive = true };
 
     private const int MAX_QUEUE_SIZE = 5;       // samples to average
     private const double DATA_SOURCE_FREQUENCY = 120; // Hz
@@ -30,7 +47,7 @@ public partial class MainWindow : Window
 
     private WebsocketClient? _client;
 
-    private double[] _maxPupilSize = {0, 0};
+    private readonly double[] _maxPupilSize = {0, 0};
     private Source _source = Source.Diameter;
     private int _pupilVisible = 0;
 
@@ -38,9 +55,10 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        _graphs = new LiveData[2] { lvdChartLeft, lvdChartRight };
-        _bars = new Border[2] { brdSizeLeft, brdSizeRight };
-        _values = new TextBlock[2] { tblSizeLeft, tblSizeRight };
+        _ui = new[] {
+            new PupilUI(lvdChartLeft, brdSizeLeft, tblSizeLeft),
+            new PupilUI(lvdChartRight, brdSizeRight, tblSizeRight)
+        };
 
         CreateWebSocketClient();
 
@@ -96,8 +114,7 @@ public partial class MainWindow : Window
 
     private void ResetGraphs()
     {
-        if (_graphs != null)
-            _graphs[_pupilVisible].Reset(DATA_UPDATE_FREQUENCY / DATA_SOURCE_FREQUENCY / LiveData.PixelsPerPoint, 0);
+        _ui?[_pupilVisible].Graph.Reset(DATA_UPDATE_FREQUENCY / DATA_SOURCE_FREQUENCY / LiveData.PixelsPerPoint, 0);
     }
 
     private void HandlePupil(Types.Pupil pupil)
@@ -117,36 +134,36 @@ public partial class MainWindow : Window
         if (size < 0)
             return;
 
-        _values[id].Text = size.ToString("F2");
-        _queue[id].Enqueue(pupil);
+        _ui[id].Value.Text = size.ToString("F2");
+        _ui[id].Queue.Enqueue(pupil);
 
         UpdateGraphAndBar(id);
     }
 
     private void UpdateGraphAndBar(int id)
     {
-        if (_queue[id].Count != MAX_QUEUE_SIZE)
+        if (_ui[id].Queue.Count != MAX_QUEUE_SIZE)
             return;
 
-        var mean = _queue[id].Average(pupil => _source switch
+        var mean = _ui[id].Queue.Average(pupil => _source switch
         {
             Source.Diameter => pupil.Diameter3d,
             Source.Area => pupil.Diameter,
             _ => 0
         });
-        _graphs[id].Add(Utils.Timestamp.Sec, mean);
+        _ui[id].Graph.Add(Utils.Timestamp.Sec, mean);
 
         if (_maxPupilSize[id] < mean)
             _maxPupilSize[id] = mean;
 
-        _bars[id].Height = (_bars[id].Parent as Grid)!.ActualHeight * mean / _maxPupilSize[id];
+        _ui[id].Bar.Height = (_ui[id].Bar.Parent as Grid)!.ActualHeight * mean / _maxPupilSize[id];
 
-        _queue[id].Clear();
+        _ui[id].Queue.Clear();
     }
 
     private void Exit(object sender, ExitEventArgs e)
     {
-        _client.Dispose();
+        _client?.Dispose();
     }
 
     // UI
