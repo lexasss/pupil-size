@@ -62,13 +62,14 @@ public partial class MainWindow : Window
 
         CreateWebSocketClient();
 
-        Application.Current.Exit += Exit;
+        Application.Current.Exit += App_Exit;
     }
 
     private void CreateWebSocketClient()
     {
         var url = new Uri("ws://127.0.0.1:51688");
 
+        _client?.Dispose();
         _client = new WebsocketClient(url)
         {
             IsReconnectionEnabled = false
@@ -161,7 +162,7 @@ public partial class MainWindow : Window
         _ui[id].Queue.Clear();
     }
 
-    private void Exit(object sender, ExitEventArgs e)
+    private void App_Exit(object sender, ExitEventArgs e)
     {
         _client?.Dispose();
     }
