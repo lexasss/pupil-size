@@ -3,25 +3,30 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Controls;
 using System.Windows;
+using System.ComponentModel;
 
 namespace PupilSizeDisplay;
 
 public enum Source { Diameter, Area }
 
-public class PupilProcessor
+public class PupilProcessor : INotifyPropertyChanged
 {
-    public TextBlock Value => _value;
-    public PupilProcessor(LiveData graph, Border bar, TextBlock value, Border max)
+    public string MeanString { get; private set; } = "0";
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    public PupilProcessor(LiveData graph, Border bar, Border level)
     {
         _graph = graph;
         _bar = bar;
-        _value = value;
-        _max = max;
+        _level = level;
     }
 
     public void Clear()
     {
         _maxPupilSize = 0;
+        _means.Clear();
+        _slidingMeans.Clear();
         _graph.Reset(DATA_UPDATE_FREQUENCY / DATA_SOURCE_FREQUENCY / LiveData.PixelsPerPoint, 0);
     }
 
@@ -37,10 +42,12 @@ public class PupilProcessor
         if (size < 0)
             return;
 
-        _value.Text = size.ToString("F2");
-        _queue.Enqueue(pupil);
+        MeanString = size.ToString("F2");
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MeanString)));
 
-        if (_queue.Count == MAX_QUEUE_SIZE)
+        _means.Enqueue(pupil);
+
+        if (_means.Count == MAX_QUEUE_SIZE)
         {
             Update(source);
         }
@@ -49,42 +56,62 @@ public class PupilProcessor
     // Internal
 
     private const int MAX_QUEUE_SIZE = 5;       // samples to average
+    private const int SLIDING_QUEUE_SIZE = 50;  // means to collect
     private const double DATA_SOURCE_FREQUENCY = 120; // Hz
     private const double DATA_UPDATE_FREQUENCY = DATA_SOURCE_FREQUENCY / MAX_QUEUE_SIZE;  // Hz
 
     private readonly LiveData _graph;
     private readonly Border _bar;
-    private readonly TextBlock _value;
-    private readonly Border _max;
-    private readonly Queue<Types.Pupil> _queue = new();
+    private readonly Border _level;
+    private readonly Queue<Types.Pupil> _means = new();
+    private readonly Queue<double> _slidingMeans = new();
 
     private double _maxPupilSize = 0;
 
     private void Update(Source source)
     {
-        var mean = _queue.Average(pupil => source switch
+        var mean = _means.Average(pupil => source switch
         {
             Source.Diameter => pupil.Diameter3d,
             Source.Area => pupil.Diameter,
             _ => 0
         });
+        _means.Clear();
 
         if (_maxPupilSize < mean)
             _maxPupilSize = mean;
 
-        SetValue(mean, _maxPupilSize);
+        UpdateMean(mean);
 
-        _queue.Clear();
+        _slidingMeans.Enqueue(mean);
+        if (_slidingMeans.Count > SLIDING_QUEUE_SIZE)
+            _slidingMeans.Dequeue();
+
+        int i = 0;
+        double halfSlidingQueueSize = SLIDING_QUEUE_SIZE / 2;
+        var oldMean = _slidingMeans.Sum(size => (i++ < halfSlidingQueueSize) ? size : 0) / halfSlidingQueueSize;
+
+        UpdateSlidingMean(oldMean);
     }
 
-    private void SetValue(double mean, double max)
+    private void UpdateMean(double mean)
     {
         _graph.Add(Utils.Timestamp.Sec, mean);
 
-        var barHeight = (_bar.Parent as Grid)!.ActualHeight * mean / max;
-        _bar.Height = barHeight;
+        var height = (_bar.Parent as Grid)!.ActualHeight * mean / _maxPupilSize;
+        _bar.Height = height;
+    }
 
-        var bottomMax = Math.Max(_max.Margin.Bottom - 1, barHeight);
-        _max.Margin = new Thickness(0, 0, 0, bottomMax);
+    private void UpdateSlidingMean(double mean)
+    {
+        var bottomMargin = (_bar.Parent as Grid)!.ActualHeight * mean / _maxPupilSize;
+        _level.Margin = new Thickness(0, 0, 0, bottomMargin);
+    }
+
+    private void UpdateMax(double mean)
+    {
+        var bottomMargin = (_bar.Parent as Grid)!.ActualHeight * mean / _maxPupilSize;
+        bottomMargin = Math.Max(_level.Margin.Bottom - 1, bottomMargin);
+        _level.Margin = new Thickness(0, 0, 0, bottomMargin);
     }
 }

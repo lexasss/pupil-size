@@ -29,14 +29,14 @@
             <Setter Property="HorizontalAlignment" Value="Right"/>
             <Setter Property="Width" Value="10"/>
             <Setter Property="Height" Value="100"/>
-            <Setter Property="Background" Value="Red"/>
+            <Setter Property="Background" Value="#bbbbbb"/>
             <Setter Property="VerticalAlignment" Value="Bottom"/>
         </Style>
-        <Style x:Key="Max" TargetType="Border">
+        <Style x:Key="Level" TargetType="Border">
             <Setter Property="HorizontalAlignment" Value="Right"/>
             <Setter Property="Width" Value="10"/>
             <Setter Property="Height" Value="2"/>
-            <Setter Property="Background" Value="Blue"/>
+            <Setter Property="Background" Value="Black"/>
             <Setter Property="VerticalAlignment" Value="Bottom"/>
         </Style>
     </Window.Resources>
@@ -93,9 +93,9 @@
             <Grid Grid.Row="1">
                 <local:LiveData x:Name="lvdChart" Grid.Column="0"/>
                 <TextBlock x:Name="tblSize" Style="{StaticResource Indicator}"
-                           Text="0.00"/>
+                           Text="{Binding MeanString}"/>
                 <Border x:Name="brdSize" Style="{StaticResource Bar}"/>
-                <Border x:Name="brdMax" Style="{StaticResource Max}"/>
+                <Border x:Name="brdLevel" Style="{StaticResource Level}"/>
             </Grid>
         </Grid>
     </Grid>

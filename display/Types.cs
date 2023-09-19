@@ -21,7 +21,7 @@ public record class Pupil(
     double Diameter,
     Sphere Sphere,
     Ellipse ProjectedSphere,
-    double Yheta,
+    double Theta,
     double Phi,
     int Id
 );

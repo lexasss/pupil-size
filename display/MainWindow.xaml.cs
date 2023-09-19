@@ -11,7 +11,7 @@ namespace PupilSizeDisplay;
 
 public partial class MainWindow : Window
 {
-    private readonly PupilProcessor _ui;
+    private readonly PupilProcessor _pupilProc;
 
     private readonly JsonSerializerOptions _jsonSerializerOptions = new() { PropertyNameCaseInsensitive = true };
 
@@ -24,7 +24,8 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        _ui = new PupilProcessor(lvdChart, brdSize, tblSize, brdMax);
+        _pupilProc = new PupilProcessor(lvdChart, brdSize, brdLevel);
+        DataContext = _pupilProc;
 
         CreateWebSocketClient();
 
@@ -76,7 +77,7 @@ public partial class MainWindow : Window
                 Dispatcher.Invoke(() =>
                 {
                     if (_pupilVisible == (1 - pupil.Id))
-                        _ui.Add(pupil, _source);
+                        _pupilProc.Add(pupil, _source);
                 });
             }
             catch (TaskCanceledException)
@@ -93,19 +94,19 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        _ui?.Clear();
+        _pupilProc?.Clear();
         lsvSource.Focus();
     }
 
     private void Source_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         _source = (Source)Enum.Parse(typeof(Source), lsvSource.SelectedItem?.ToString() ?? "");
-        _ui?.Clear();
+        _pupilProc?.Clear();
     }
 
     private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         _pupilVisible = tbcTabs.SelectedIndex;
-        _ui?.Clear();
+        _pupilProc?.Clear();
     }
 }
