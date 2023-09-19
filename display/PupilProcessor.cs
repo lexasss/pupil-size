@@ -11,7 +11,7 @@ public enum Source { Diameter, Area }
 
 public class PupilProcessor : INotifyPropertyChanged
 {
-    public string MeanString { get; private set; } = "0";
+    public string MeanString { get; private set; } = "0.00";
 
     public event PropertyChangedEventHandler? PropertyChanged;
 

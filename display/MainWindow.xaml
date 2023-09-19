@@ -6,14 +6,10 @@
         xmlns:sys="clr-namespace:System;assembly=mscorlib" 
         xmlns:local="clr-namespace:PupilSizeDisplay"
         mc:Ignorable="d"
-        Title="PupilSize"
+        Title="Pupil Size"
         Height="450" Width="1000"
         Loaded="Window_Loaded">
     <Window.Resources>
-        <Style x:Key="Item" TargetType="Label">
-            <Setter Property="Margin" Value="2,12"/>
-        </Style>
-
         <ObjectDataProvider x:Key="DataSourceType"
                             ObjectType="{x:Type sys:Enum}"
                             MethodName="GetValues">
@@ -22,6 +18,9 @@
             </ObjectDataProvider.MethodParameters>
         </ObjectDataProvider>
 
+        <Style x:Key="SourceItem" TargetType="Label">
+            <Setter Property="Margin" Value="2,12"/>
+        </Style>
         <Style x:Key="Indicator" TargetType="TextBlock">
             <Setter Property="HorizontalAlignment" Value="Right"/>
         </Style>
@@ -45,42 +44,53 @@
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-        <StackPanel Grid.Column="0">
-            <Label Content="Source"
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Label Grid.Row="0"
+                   Content="Source"
                    VerticalContentAlignment="Center"
                    HorizontalContentAlignment="Center"
                    Height="34"/>
-            <ListView x:Name="lsvSource"
+            <ListView x:Name="lsvSource" Grid.Row="1"
                       ItemsSource="{Binding Source={StaticResource DataSourceType}}"
                       SelectedIndex="0"
                       SelectionChanged="Source_SelectionChanged">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <Label Style="{StaticResource Item}" Content="{Binding}"/>
+                        <Label Style="{StaticResource SourceItem}" Content="{Binding}"/>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
-        </StackPanel>
-        <StackPanel Grid.Column="0"
+            <Border Grid.Row="2"
+                    BorderThickness="0,0,1,0"
+                    BorderBrush="Gray">
+                <StackPanel Grid.Row="2"
                     MinWidth="94"
                     VerticalAlignment="Bottom">
-            <Label Content="Pupil Capture"
+                    <Label Content="Pupil Capture"
                    HorizontalContentAlignment="Center"/>
-            <WrapPanel Margin="4">
-                <Ellipse x:Name="elpCorrectionSign"
+                    <WrapPanel Margin="4">
+                        <Ellipse x:Name="elpCorrectionSign"
                          Fill="Red"
                          Margin="4"
                          Width="{Binding ActualHeight, Mode=OneWay, RelativeSource={RelativeSource Self}}"/>
-                <TextBlock x:Name="tblConnection" Text="disconnected"/>
-            </WrapPanel>
-        </StackPanel>
+                        <TextBlock x:Name="tblConnection" Text="disconnected"/>
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <TabControl x:Name="tbcTabs" Grid.Row="0"
-                    SelectionChanged="TabControl_SelectionChanged">
+                    SelectionChanged="TabControl_SelectionChanged"
+                        Margin="-4,0,0,-4">
                 <TabControl.Resources>
                     <Style TargetType="TabItem">
                         <Setter Property="Width" Value="120"/>

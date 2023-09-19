@@ -11,6 +11,12 @@ namespace PupilSizeDisplay;
 
 public partial class MainWindow : Window
 {
+    private enum Eye : int
+    {
+        Left = 0,
+        Right = 1,
+    }
+
     private readonly PupilProcessor _pupilProc;
 
     private readonly JsonSerializerOptions _jsonSerializerOptions = new() { PropertyNameCaseInsensitive = true };
@@ -18,7 +24,7 @@ public partial class MainWindow : Window
     private WebsocketClient? _client;
 
     private Source _source = Source.Diameter;
-    private int _pupilVisible = 0; // 0 (left) or 1 (right)
+    private Eye _eye = Eye.Left;
 
     public MainWindow()
     {
@@ -76,7 +82,7 @@ public partial class MainWindow : Window
             {
                 Dispatcher.Invoke(() =>
                 {
-                    if (_pupilVisible == (1 - pupil.Id))
+                    if ((int)_eye == (1 - pupil.Id))
                         _pupilProc.Add(pupil, _source);
                 });
             }
@@ -106,7 +112,11 @@ public partial class MainWindow : Window
 
     private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        _pupilVisible = tbcTabs.SelectedIndex;
+        _eye = (Eye)tbcTabs.SelectedIndex;
+
+        if (!Enum.IsDefined(typeof(Eye), _eye))
+            throw new Exception("Unsupported eye");
+
         _pupilProc?.Clear();
     }
 }
