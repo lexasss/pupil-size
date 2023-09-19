@@ -21,6 +21,24 @@
                 <x:Type TypeName="local:Source" />
             </ObjectDataProvider.MethodParameters>
         </ObjectDataProvider>
+
+        <Style x:Key="Indicator" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+        </Style>
+        <Style x:Key="Bar" TargetType="Border">
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="Width" Value="10"/>
+            <Setter Property="Height" Value="100"/>
+            <Setter Property="Background" Value="Red"/>
+            <Setter Property="VerticalAlignment" Value="Bottom"/>
+        </Style>
+        <Style x:Key="Max" TargetType="Border">
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="Width" Value="10"/>
+            <Setter Property="Height" Value="2"/>
+            <Setter Property="Background" Value="Blue"/>
+            <Setter Property="VerticalAlignment" Value="Bottom"/>
+        </Style>
     </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
@@ -46,6 +64,8 @@
         <StackPanel Grid.Column="0"
                     MinWidth="94"
                     VerticalAlignment="Bottom">
+            <Label Content="Pupil Capture"
+                   HorizontalContentAlignment="Center"/>
             <WrapPanel Margin="4">
                 <Ellipse x:Name="elpCorrectionSign"
                          Fill="Red"
@@ -54,38 +74,29 @@
                 <TextBlock x:Name="tblConnection" Text="disconnected"/>
             </WrapPanel>
         </StackPanel>
-        <TabControl x:Name="tbcTabs" Grid.Column="1"
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <TabControl x:Name="tbcTabs" Grid.Row="0"
                     SelectionChanged="TabControl_SelectionChanged">
-            <TabControl.Resources>
-                <Style TargetType="TextBlock">
-                    <Setter Property="HorizontalAlignment" Value="Right"/>
-                </Style>
-                <Style TargetType="TabItem">
-                    <Setter Property="Width" Value="120"/>
-                    <Setter Property="Height" Value="32"/>
-                </Style>
-                <Style x:Key="Bar" TargetType="Border">
-                    <Setter Property="HorizontalAlignment" Value="Right"/>
-                    <Setter Property="Width" Value="10"/>
-                    <Setter Property="Height" Value="100"/>
-                    <Setter Property="Background" Value="Red"/>
-                    <Setter Property="VerticalAlignment" Value="Bottom"/>
-                </Style>
-            </TabControl.Resources>
-            <TabItem Header="Left">
-                <Grid>
-                    <local:LiveData x:Name="lvdChartLeft" Grid.Column="0"/>
-                    <TextBlock x:Name="tblSizeLeft" Text="0.00"/>
-                    <Border x:Name="brdSizeLeft" Style="{StaticResource Bar}"/>
-                </Grid>
-            </TabItem>
-            <TabItem Header="Right">
-                <Grid>
-                    <local:LiveData x:Name="lvdChartRight"/>
-                    <TextBlock x:Name="tblSizeRight" Text="0"/>
-                    <Border x:Name="brdSizeRight" Style="{StaticResource Bar}"/>
-                </Grid>
-            </TabItem>
-        </TabControl>
+                <TabControl.Resources>
+                    <Style TargetType="TabItem">
+                        <Setter Property="Width" Value="120"/>
+                        <Setter Property="Height" Value="32"/>
+                    </Style>
+                </TabControl.Resources>
+                <TabItem Header="Left"/>
+                <TabItem Header="Right"/>
+            </TabControl>
+            <Grid Grid.Row="1">
+                <local:LiveData x:Name="lvdChart" Grid.Column="0"/>
+                <TextBlock x:Name="tblSize" Style="{StaticResource Indicator}"
+                           Text="0.00"/>
+                <Border x:Name="brdSize" Style="{StaticResource Bar}"/>
+                <Border x:Name="brdMax" Style="{StaticResource Max}"/>
+            </Grid>
+        </Grid>
     </Grid>
 </Window>
