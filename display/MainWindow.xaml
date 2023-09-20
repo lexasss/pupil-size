@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:sys="clr-namespace:System;assembly=mscorlib" 
         xmlns:local="clr-namespace:PupilSizeDisplay"
+        xmlns:trackers="clr-namespace:PupilSizeDisplay.Trackers"
         mc:Ignorable="d"
         Title="Pupil Size"
         Height="450" Width="1000"
@@ -14,7 +15,7 @@
                             ObjectType="{x:Type sys:Enum}"
                             MethodName="GetValues">
             <ObjectDataProvider.MethodParameters>
-                <x:Type TypeName="local:Source" />
+                <x:Type TypeName="trackers:DataSource" />
             </ObjectDataProvider.MethodParameters>
         </ObjectDataProvider>
 

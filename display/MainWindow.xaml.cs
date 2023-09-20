@@ -1,122 +1,84 @@
-﻿using System;
-using System.Text.Json;
+﻿using PupilSizeDisplay.Trackers;
+using PupilSizeDisplay.Trackers.PupilLabs;
+using System;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
-using Websocket.Client;
 
 namespace PupilSizeDisplay;
 
 public partial class MainWindow : Window
 {
-    private enum Eye : int
-    {
-        Left = 0,
-        Right = 1,
-    }
-
-    private readonly PupilProcessor _pupilProc;
-
-    private readonly JsonSerializerOptions _jsonSerializerOptions = new() { PropertyNameCaseInsensitive = true };
-
-    private WebsocketClient? _client;
-
-    private Source _source = Source.Diameter;
-    private Eye _eye = Eye.Left;
+    private readonly PupilLabs _tracker;
+    private readonly DataProcessor _dataProc;
 
     public MainWindow()
     {
         InitializeComponent();
 
-        _pupilProc = new PupilProcessor(lvdChart, brdSize, brdLevel);
-        DataContext = _pupilProc;
+        _dataProc = new DataProcessor(lvdChart, brdSize, brdLevel);
+        DataContext = _dataProc;
 
-        CreateWebSocketClient();
-
-        Application.Current.Exit += App_Exit;
-    }
-
-    private void CreateWebSocketClient()
-    {
-        var url = new Uri("ws://127.0.0.1:51688");
-
-        _client?.Dispose();
-        _client = new WebsocketClient(url)
-        {
-            IsReconnectionEnabled = false
-        };
-
-        _client.DisconnectionHappened.Subscribe(OnDisconnected);
-        _client.ReconnectionHappened.Subscribe(OnConnected);
-        _client.MessageReceived.Subscribe(OnMessage);
-
-        _client.Start();
-    }
-
-    private void OnDisconnected(DisconnectionInfo info) => Dispatcher.Invoke(() =>
-    {
-        tblConnection.Text = "disconnected";
-        elpCorrectionSign.Fill = Brushes.Red;
-
-        System.Diagnostics.Debug.WriteLine("Disconnected");
-
-        DispatchOnce.Do(3, CreateWebSocketClient);
-    });
-
-    private void OnConnected(ReconnectionInfo info) => Dispatcher.Invoke(() =>
-    {
-        tblConnection.Text = "connected";
-        elpCorrectionSign.Fill = Brushes.Green;
-
-        System.Diagnostics.Debug.WriteLine("Connected");
-    });
-
-    private void OnMessage(ResponseMessage msg)
-    {
-        Types.Pupil? pupil = msg.Text != null ? JsonSerializer.Deserialize<Types.Pupil>(msg.Text, _jsonSerializerOptions) : null;
-        if (pupil != null)
+        _tracker = new PupilLabs();
+        _tracker.Sample += (s, e) =>
         {
             try
             {
                 Dispatcher.Invoke(() =>
                 {
-                    if ((int)_eye == (1 - pupil.Id))
-                        _pupilProc.Add(pupil, _source);
+                    _dataProc.Add(e);
                 });
             }
             catch (TaskCanceledException)
             { }
-        }
-    }
-
-    private void App_Exit(object sender, ExitEventArgs e)
-    {
-        _client?.Dispose();
+        };
+        _tracker.Connected += (s, e) => Dispatcher.Invoke(() =>
+        {
+            tblConnection.Text = "connected";
+            elpCorrectionSign.Fill = Brushes.Green;
+        });
+        _tracker.Disconnected += (s, e) => Dispatcher.Invoke(() =>
+        {
+            tblConnection.Text = "disconnected";
+            elpCorrectionSign.Fill = Brushes.Red;
+        });
     }
 
     // UI
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        _pupilProc?.Clear();
+        _dataProc?.Clear();
         lsvSource.Focus();
     }
 
     private void Source_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        _source = (Source)Enum.Parse(typeof(Source), lsvSource.SelectedItem?.ToString() ?? "");
-        _pupilProc?.Clear();
+        if (!IsInitialized)
+            return;
+
+        var source = (DataSource)Enum.Parse(typeof(DataSource), lsvSource.SelectedItem?.ToString() ?? "");
+
+        if (!Enum.IsDefined(typeof(DataSource), source))
+            throw new Exception("Unsupported data source");
+
+        _tracker.Source = source;
+        _dataProc?.Clear();
     }
 
     private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        _eye = (Eye)tbcTabs.SelectedIndex;
+        if (!IsInitialized)
+            return;
 
-        if (!Enum.IsDefined(typeof(Eye), _eye))
+        var eye = (Eye)tbcTabs.SelectedIndex;
+
+        if (!Enum.IsDefined(typeof(Eye), eye))
             throw new Exception("Unsupported eye");
 
-        _pupilProc?.Clear();
+        _tracker.Eye = eye;
+        _dataProc?.Clear();
     }
 }

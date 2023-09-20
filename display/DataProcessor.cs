@@ -7,15 +7,13 @@ using System.ComponentModel;
 
 namespace PupilSizeDisplay;
 
-public enum Source { Diameter, Area }
-
-public class PupilProcessor : INotifyPropertyChanged
+public class DataProcessor : INotifyPropertyChanged
 {
     public string MeanString { get; private set; } = "0.00";
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public PupilProcessor(LiveData graph, Border bar, Border level)
+    public DataProcessor(LiveData graph, Border bar, Border level)
     {
         _graph = graph;
         _bar = bar;
@@ -30,26 +28,16 @@ public class PupilProcessor : INotifyPropertyChanged
         _graph.Reset(DATA_UPDATE_FREQUENCY / DATA_SOURCE_FREQUENCY / LiveData.PixelsPerPoint, 0);
     }
 
-    public void Add(Types.Pupil pupil, Source source)
+    public void Add(double size)
     {
-        var size = source switch
-        {
-            Source.Diameter => pupil.Diameter3d,
-            Source.Area => pupil.Diameter,
-            _ => 0
-        };
-
-        if (size < 0)
-            return;
-
         MeanString = size.ToString("F2");
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MeanString)));
 
-        _means.Enqueue(pupil);
+        _means.Enqueue(size);
 
         if (_means.Count == MAX_QUEUE_SIZE)
         {
-            Update(source);
+            Update();
         }
     }
 
@@ -63,19 +51,14 @@ public class PupilProcessor : INotifyPropertyChanged
     private readonly LiveData _graph;
     private readonly Border _bar;
     private readonly Border _level;
-    private readonly Queue<Types.Pupil> _means = new();
+    private readonly Queue<double> _means = new();
     private readonly Queue<double> _slidingMeans = new();
 
     private double _maxPupilSize = 0;
 
-    private void Update(Source source)
+    private void Update()
     {
-        var mean = _means.Average(pupil => source switch
-        {
-            Source.Diameter => pupil.Diameter3d,
-            Source.Area => pupil.Diameter,
-            _ => 0
-        });
+        var mean = _means.Average();
         _means.Clear();
 
         if (_maxPupilSize < mean)
