@@ -22,7 +22,7 @@ public class DataProcessor : INotifyPropertyChanged
 
     public void Clear()
     {
-        _maxPupilSize = 0;
+        _maxPupilSize = 5;
         _means.Clear();
         _slidingMeans.Clear();
         _graph.Reset(DATA_UPDATE_FREQUENCY / DATA_SOURCE_FREQUENCY / LiveData.PixelsPerPoint, 0);
@@ -54,7 +54,7 @@ public class DataProcessor : INotifyPropertyChanged
     private readonly Queue<double> _means = new();
     private readonly Queue<double> _slidingMeans = new();
 
-    private double _maxPupilSize = 0;
+    private double _maxPupilSize = 5;
 
     private void Update()
     {

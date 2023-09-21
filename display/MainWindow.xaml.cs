@@ -1,6 +1,6 @@
 ﻿using PupilSizeDisplay.Trackers;
-using PupilSizeDisplay.Trackers.PupilLabs;
 using System;
+using System.Net;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -11,17 +11,48 @@ namespace PupilSizeDisplay;
 
 public partial class MainWindow : Window
 {
-    private readonly PupilLabs _tracker;
+    enum TrackerType { PupilLabs, EtuDriver }
+
     private readonly DataProcessor _dataProc;
+
+    private BaseTracker? _tracker;
 
     public MainWindow()
     {
         InitializeComponent();
 
+        var settings = Display.Properties.Settings.Default;
+        cmbTrackerType.SelectedIndex = settings.DeviceIndex;
+        txbIP.Text = settings.DeviceIP;
+
         _dataProc = new DataProcessor(lvdChart, brdSize, brdLevel);
         DataContext = _dataProc;
 
-        _tracker = new PupilLabs();
+        var trackerType = (TrackerType)cmbTrackerType.SelectedIndex;
+        CreateTracker(trackerType);
+    }
+
+    private bool CreateTracker(TrackerType trackerType)
+    {
+        _tracker?.Dispose();
+        _tracker = null;
+
+        _dataProc.Clear();
+
+        var ip = txbIP.Text ?? "";
+        if (!IPAddress.TryParse(ip, out _))
+        {
+            MessageBox.Show($"'{ip}' is not a valid IP", Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            return false;
+        }
+
+        _tracker = trackerType switch
+        {
+            TrackerType.EtuDriver => new Trackers.EtuDriver.Tracker(ip),
+            TrackerType.PupilLabs => new Trackers.PupilLabs.Tracker(ip),
+            _ => throw new Exception($"Unsuppported tracker type: {trackerType}")
+        };
+
         _tracker.Sample += (s, e) =>
         {
             try
@@ -34,16 +65,21 @@ public partial class MainWindow : Window
             catch (TaskCanceledException)
             { }
         };
-        _tracker.Connected += (s, e) => Dispatcher.Invoke(() =>
+        _tracker.DeviceStateChanged += (s, e) => Dispatcher.Invoke(() =>
         {
-            tblConnection.Text = "connected";
-            elpCorrectionSign.Fill = Brushes.Green;
+            if (e.Name != null)
+            {
+                lblDeviceName.Content = e.Name;
+            }
+            if (e.State != null)
+            {
+                var isConnected = e.State?.HasFlag(DeviceState.Connected) == true;
+                tblConnection.Text = isConnected ? "connected" : "disconnected";
+                elpCorrectionSign.Fill = isConnected ? Brushes.Green : Brushes.Red;
+            }
         });
-        _tracker.Disconnected += (s, e) => Dispatcher.Invoke(() =>
-        {
-            tblConnection.Text = "disconnected";
-            elpCorrectionSign.Fill = Brushes.Red;
-        });
+
+        return true;
     }
 
     // UI
@@ -64,7 +100,8 @@ public partial class MainWindow : Window
         if (!Enum.IsDefined(typeof(DataSource), source))
             throw new Exception("Unsupported data source");
 
-        _tracker.Source = source;
+        if (_tracker != null)
+            _tracker.Source = source;
         _dataProc?.Clear();
     }
 
@@ -78,7 +115,20 @@ public partial class MainWindow : Window
         if (!Enum.IsDefined(typeof(Eye), eye))
             throw new Exception("Unsupported eye");
 
-        _tracker.Eye = eye;
+        if (_tracker != null)
+            _tracker.Eye = eye;
         _dataProc?.Clear();
+    }
+
+    private void SelectDevice_Click(object sender, RoutedEventArgs e)
+    {
+        var trackerType = (TrackerType)cmbTrackerType.SelectedIndex;
+        if (CreateTracker(trackerType))
+        {
+            var settings = Display.Properties.Settings.Default;
+            settings.DeviceIndex = cmbTrackerType.SelectedIndex;
+            settings.DeviceIP = txbIP.Text;
+            settings.Save();
+        }
     }
 }

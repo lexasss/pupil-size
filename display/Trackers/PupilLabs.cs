@@ -1,7 +1,4 @@
-﻿using System;
-using System.Text.Json;
-using System.Windows;
-using Websocket.Client;
+﻿using System.Text.Json;
 
 namespace PupilSizeDisplay.Trackers.PupilLabs;
 
@@ -31,67 +28,20 @@ public record class Pupil(
     int Id
 );
 
-public class PupilLabs : ITracker
+public class Tracker : BaseTracker
 {
-    public event EventHandler<double>? Sample;
-    public event EventHandler? Connected;
-    public event EventHandler? Disconnected;
-
-    public Eye Eye { get; set; } = Eye.Left;
-    public DataSource Source { get; set; } = DataSource.Diameter;
-
-    public PupilLabs()
-    {
-        CreateWebSocketClient();
-        Application.Current.Exit += App_Exit;
-    }
+    public Tracker(string ip) : base(ip) { }
 
     // Internal
 
     private readonly JsonSerializerOptions _jsonSerializerOptions = new() { PropertyNameCaseInsensitive = true };
 
-    private WebsocketClient? _client;
+    protected override string Name => "Pupil Core";
+    protected override int Port => 51688;
 
-    private void CreateWebSocketClient()
+    protected override void ParseMessage(string message)
     {
-        var url = new Uri("ws://127.0.0.1:51688");
-
-        _client?.Dispose();
-        _client = new WebsocketClient(url)
-        {
-            IsReconnectionEnabled = false
-        };
-
-        _client.DisconnectionHappened.Subscribe(OnDisconnected);
-        _client.ReconnectionHappened.Subscribe(OnConnected);
-        _client.MessageReceived.Subscribe(OnMessage);
-
-        _client.Start();
-    }
-
-    private void App_Exit(object sender, ExitEventArgs e)
-    {
-        _client?.Dispose();
-    }
-
-    private void OnDisconnected(DisconnectionInfo info)
-    {
-        System.Diagnostics.Debug.WriteLine("Disconnected");
-        Disconnected?.Invoke(this, new EventArgs());
-
-        DispatchOnce.Do(3, CreateWebSocketClient);
-    }
-
-    private void OnConnected(ReconnectionInfo info)
-    {
-
-        System.Diagnostics.Debug.WriteLine($"Connected: {info}");
-        Connected?.Invoke(this, new EventArgs());
-    }
-
-    private void OnMessage(ResponseMessage msg)
-    {
-        Pupil? pupil = msg.Text != null ? JsonSerializer.Deserialize<Pupil>(msg.Text, _jsonSerializerOptions) : null;
+        Pupil? pupil = JsonSerializer.Deserialize<Pupil>(message, _jsonSerializerOptions);
         if (pupil != null && (int)Eye == (1 - pupil.Id))
         {
             var size = Source switch
@@ -103,7 +53,7 @@ public class PupilLabs : ITracker
 
             if (size >= 0)
             {
-                Sample?.Invoke(this, size);
+                OnSample(size);
             }
         }
     }

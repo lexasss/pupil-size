@@ -8,6 +8,8 @@
         xmlns:trackers="clr-namespace:PupilSizeDisplay.Trackers"
         mc:Ignorable="d"
         Title="Pupil Size"
+        MinHeight="344"
+        MinWidth="600"
         Height="450" Width="1000"
         Loaded="Window_Loaded">
     <Window.Resources>
@@ -70,10 +72,27 @@
                     BorderThickness="0,0,1,0"
                     BorderBrush="Gray">
                 <StackPanel Grid.Row="2"
-                    MinWidth="94"
-                    VerticalAlignment="Bottom">
-                    <Label Content="Pupil Capture"
-                   HorizontalContentAlignment="Center"/>
+                            MinWidth="94"
+                            VerticalAlignment="Bottom">
+                    <StackPanel Margin="0,12">
+                        <ComboBox x:Name="cmbTrackerType">
+                            <ComboBoxItem Content="Pupil Labs"/>
+                            <ComboBoxItem Content="ETU-Driver" IsSelected="True"/>
+                        </ComboBox>
+                        <WrapPanel>
+                            <Label Content="IP"/>
+                            <TextBox x:Name="txbIP"
+                                     Text="127.0.0.1"
+                                     MinWidth="94"
+                                     VerticalContentAlignment="Center"/>
+                        </WrapPanel>
+                        <Button Content="Select"
+                                Padding="0,8"
+                                Click="SelectDevice_Click"/>
+                    </StackPanel>
+                    <Label x:Name="lblDeviceName"
+                           Content="Device"
+                           HorizontalContentAlignment="Center"/>
                     <WrapPanel Margin="4">
                         <Ellipse x:Name="elpCorrectionSign"
                          Fill="Red"
@@ -103,10 +122,10 @@
             </TabControl>
             <Grid Grid.Row="1">
                 <local:LiveData x:Name="lvdChart" Grid.Column="0"/>
-                <TextBlock x:Name="tblSize" Style="{StaticResource Indicator}"
-                           Text="{Binding MeanString}"/>
                 <Border x:Name="brdSize" Style="{StaticResource Bar}"/>
                 <Border x:Name="brdLevel" Style="{StaticResource Level}"/>
+                <TextBlock x:Name="tblSize" Style="{StaticResource Indicator}"
+                           Text="{Binding MeanString}"/>
             </Grid>
         </Grid>
     </Grid>
