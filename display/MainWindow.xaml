@@ -78,6 +78,7 @@
                         <ComboBox x:Name="cmbTrackerType">
                             <ComboBoxItem Content="Pupil Labs"/>
                             <ComboBoxItem Content="ETU-Driver" IsSelected="True"/>
+                            <ComboBoxItem Content="Smart Eye"/>
                         </ComboBox>
                         <WrapPanel>
                             <Label Content="IP"/>
@@ -86,7 +87,7 @@
                                      MinWidth="94"
                                      VerticalContentAlignment="Center"/>
                         </WrapPanel>
-                        <Button Content="Select"
+                        <Button Content="Connect"
                                 Padding="0,8"
                                 Click="SelectDevice_Click"/>
                     </StackPanel>

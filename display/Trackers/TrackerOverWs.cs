@@ -4,39 +4,14 @@ using Websocket.Client;
 
 namespace PupilSizeDisplay.Trackers;
 
-public enum Eye : int
-{
-    Left = 0,
-    Right = 1,
-}
-
-public enum DataSource { Diameter, Area }
-
-
-[Flags]
-public enum DeviceState
-{
-    None = 0,
-    Connected = 1,
-    Calibrated = 2,
-    Tracking = 4,
-    Blocked = 8     // for example, it's software is showing a dialog
-}
-
-public struct DeviceInfo
-{
-    public string? Name;
-    public DeviceState? State;
-}
-
-public abstract class BaseTracker : IDisposable
+public abstract class TrackerOverWs : ITracker
 {
     public event EventHandler<DeviceInfo>? DeviceStateChanged;
     public event EventHandler<double>? Sample;
     public Eye Eye { get; set; }
     public DataSource Source { get; set; }
 
-    public BaseTracker(string ip = "127.0.0.1")
+    public TrackerOverWs(string ip = "127.0.0.1")
     {
         _ip = ip;
 
@@ -48,6 +23,7 @@ public abstract class BaseTracker : IDisposable
     public void Dispose()
     {
         _isDisposed = true;
+        _reconnectTimer?.Dispose();
         _client?.Dispose();
         GC.SuppressFinalize(this);
     }
@@ -61,6 +37,7 @@ public abstract class BaseTracker : IDisposable
     private readonly string _ip;
 
     private WebsocketClient? _client;
+    private DispatchOnce? _reconnectTimer;
 
     private bool _isDisposed = false;
 
@@ -76,6 +53,8 @@ public abstract class BaseTracker : IDisposable
 
     private void CreateWebSocketClient()
     {
+        _reconnectTimer = null;
+
         var url = new Uri($"ws://{_ip}:{Port}");
 
         _client?.Dispose();
@@ -110,7 +89,7 @@ public abstract class BaseTracker : IDisposable
 
         if (!_isDisposed)
         {
-            DispatchOnce.Do(3, CreateWebSocketClient);
+            _reconnectTimer = DispatchOnce.Do(3, CreateWebSocketClient);
         }
     }
 

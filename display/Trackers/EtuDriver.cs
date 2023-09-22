@@ -1,83 +1,84 @@
 ﻿using System.Text.Json;
 
-namespace PupilSizeDisplay.Trackers.EtuDriver;
+namespace PupilSizeDisplay.Trackers;
 
-// Data types transferred over the net
-
-public record class Message
+public class EtuDriver : TrackerOverWs
 {
-    public string Type { get; init; }
-    public static Message? Create(string json)
+    #region Data types transferred over the net
+
+    public record class Message
     {
-        Message? msg = JsonSerializer.Deserialize<Message>(json, _jsonSerializerOptions);
-        if (msg == null)
-            return null;
-        else if (msg.Type == "device")
-            return JsonSerializer.Deserialize<DeviceMessage>(json!, _jsonSerializerOptions);
-        else if (msg.Type == "state")
-            return JsonSerializer.Deserialize<StateMessage>(json!, _jsonSerializerOptions);
-        else if (msg.Type == "sample")
-            return JsonSerializer.Deserialize<SampleMessage>(json!, _jsonSerializerOptions);
-        else
+        public string Type { get; init; }
+        public static Message? Create(string json)
         {
-            System.Diagnostics.Debug.WriteLine($"Unknown message: {json}");
-            return null;
+            Message? msg = JsonSerializer.Deserialize<Message>(json, _jsonSerializerOptions);
+            if (msg == null)
+                return null;
+            else if (msg.Type == "device")
+                return JsonSerializer.Deserialize<DeviceMessage>(json!, _jsonSerializerOptions);
+            else if (msg.Type == "state")
+                return JsonSerializer.Deserialize<StateMessage>(json!, _jsonSerializerOptions);
+            else if (msg.Type == "sample")
+                return JsonSerializer.Deserialize<SampleMessage>(json!, _jsonSerializerOptions);
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"Unknown message: {json}");
+                return null;
+            }
+        }
+        public Message(string type)
+        {
+            Type = type;
+        }
+
+        // Internal
+
+        private static readonly JsonSerializerOptions _jsonSerializerOptions = new() { PropertyNameCaseInsensitive = true };
+    }
+
+    public record class DeviceMessage : Message
+    {
+        public string Name { get; init; }
+
+        public DeviceMessage(string type, string name) : base(type)
+        {
+            Name = name;
         }
     }
-    public Message(string type)
+
+    public record class StateMessage : Message
     {
-        Type = type;
+        public DeviceState Value { get; init; }
+
+        public StateMessage(string type, DeviceState value) : base(type)
+        {
+            Value = value;
+        }
     }
 
-    // Internal
+    public record class EyeCoordinates(double XL, double YL, double XR, double YR);
 
-    private static readonly JsonSerializerOptions _jsonSerializerOptions = new() { PropertyNameCaseInsensitive = true };
-}
-
-public record class DeviceMessage : Message
-{
-    public string Name { get; init; }
-
-    public DeviceMessage(string type, string name) : base(type)
+    public record class SampleMessage : Message
     {
-        Name = name;
+        public long Ts { get; init; }
+        public long X { get; init; }
+        public long Y { get; init; }
+        public double P { get; init; }
+        public EyeCoordinates EC { get; init; }
+
+        public SampleMessage(string type, long ts, long x, long y, double p, EyeCoordinates ec) : base(type)
+        {
+            Ts = ts;
+            X = x;
+            Y = y;
+            P = p;
+            EC = ec;
+        }
     }
-}
 
-public record class StateMessage : Message
-{
-    public DeviceState Value { get; init; }
+    #endregion
 
-    public StateMessage(string type, DeviceState value) : base(type)
-    {
-        Value = value;
-    }
-}
-
-public record class EyeCoordinates(double XL, double YL, double XR, double YR);
-
-public record class SampleMessage : Message
-{
-    public long Ts { get; init; }
-    public long X { get; init; }
-    public long Y { get; init; }
-    public double P { get; init; }
-    public EyeCoordinates EC { get; init; }
-
-    public SampleMessage(string type, long ts, long x, long y, double p, EyeCoordinates ec) : base(type)
-    {
-        Ts = ts;
-        X = x;
-        Y = y;
-        P = p;
-        EC = ec;
-    }
-}
-
-
-public class Tracker : BaseTracker
-{
-    public Tracker(string ip) : base(ip) { }
+    public EtuDriver(string ip) : base(ip) { }
 
     // Internal
 

@@ -11,11 +11,11 @@ namespace PupilSizeDisplay;
 
 public partial class MainWindow : Window
 {
-    enum TrackerType { PupilLabs, EtuDriver }
+    private enum TrackerType { PupilLabs, EtuDriver, SmartEye }
 
     private readonly DataProcessor _dataProc;
 
-    private BaseTracker? _tracker;
+    private ITracker? _tracker;
 
     public MainWindow()
     {
@@ -48,8 +48,9 @@ public partial class MainWindow : Window
 
         _tracker = trackerType switch
         {
-            TrackerType.EtuDriver => new Trackers.EtuDriver.Tracker(ip),
-            TrackerType.PupilLabs => new Trackers.PupilLabs.Tracker(ip),
+            TrackerType.EtuDriver => new EtuDriver(ip),
+            TrackerType.PupilLabs => new PupilLabs(ip),
+            TrackerType.SmartEye => new SmartEye(ip),
             _ => throw new Exception($"Unsuppported tracker type: {trackerType}")
         };
 
