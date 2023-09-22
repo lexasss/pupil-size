@@ -21,7 +21,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        var settings = Display.Properties.Settings.Default;
+        var settings = Properties.Settings.Default;
         cmbTrackerType.SelectedIndex = settings.DeviceIndex;
         txbIP.Text = settings.DeviceIP;
 
@@ -126,7 +126,7 @@ public partial class MainWindow : Window
         var trackerType = (TrackerType)cmbTrackerType.SelectedIndex;
         if (CreateTracker(trackerType))
         {
-            var settings = Display.Properties.Settings.Default;
+            var settings = Properties.Settings.Default;
             settings.DeviceIndex = cmbTrackerType.SelectedIndex;
             settings.DeviceIP = txbIP.Text;
             settings.Save();

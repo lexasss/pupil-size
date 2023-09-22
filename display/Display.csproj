@@ -5,6 +5,10 @@
     <TargetFramework>net6.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
+    <AssemblyName>pupil-size-display</AssemblyName>
+    <RootNamespace>PupilSizeDisplay</RootNamespace>
+    <Company>Tampere University</Company>
+    <Authors>Oleg Spakov</Authors>
   </PropertyGroup>
 
   <ItemGroup>
