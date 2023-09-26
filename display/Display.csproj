@@ -18,7 +18,7 @@
 
   <ItemGroup>
     <Reference Include="SEClient">
-      <HintPath>..\..\SmartEye\SEClient\bin\Debug\net6.0-windows\SEClient.dll</HintPath>
+      <HintPath>..\..\SmartEye\SEClient\Client\bin\Debug\net6.0-windows\SEClient.dll</HintPath>
     </Reference>
   </ItemGroup>
 
